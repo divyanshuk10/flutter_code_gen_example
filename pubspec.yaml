@@ -16,9 +16,9 @@ dependencies:
   custom_widget_annotation:
     path: packages/custom_widget_annotation/
 
-    build: ^2.1.1
-    source_gen: ^1.2.7
-    build_runner: ^2.1.5
+  build: ^2.1.1
+  source_gen: ^1.2.7
+  build_runner: ^2.1.5
 
 dev_dependencies:
   flutter_test:
