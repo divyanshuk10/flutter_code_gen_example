@@ -4,17 +4,8 @@ import 'package:analyzer/dart/element/element.dart';
 import 'package:analyzer/dart/element/type.dart';
 import 'package:analyzer/dart/element/visitor.dart';
 import 'package:build/build.dart';
-import 'package:built_collection/built_collection.dart';
-import 'package:code_builder/code_builder.dart';
 import 'package:custom_widget_annotation/custom_widget_annotation.dart';
-import 'package:dart_style/dart_style.dart';
 import 'package:source_gen/source_gen.dart';
-
-import 'element_kind.dart';
-import 'knob_provider.dart';
-
-final _dartfmt = DartFormatter();
-const _kOverrideDecorator = CodeExpression(Code('override'));
 
 class CustomWidgetGenerator extends GeneratorForAnnotation<CustomWidget> {
   @override
@@ -23,113 +14,59 @@ class CustomWidgetGenerator extends GeneratorForAnnotation<CustomWidget> {
     return _generateWidgetSource(element);
   }
 
-  FutureOr<String> _generateWidgetSource(Element element) {
-    var visitor = ModelVisitor();
+  String _generateWidgetSource(Element element) {
+    final visitor = ModelVisitor();
     element.visitChildren(visitor);
-    return storybookClassBuilder(visitor);
-  }
+    final sourceBuilder = StringBuffer();
+    // Class name
+    sourceBuilder
+        .writeln("class ${visitor.className}Widget extends StatelessWidget{");
 
-  String addKnobsToStory(ModelVisitor visitor) {
-    var knobProvider = const KnobProvider();
-    StringBuffer knob = StringBuffer();
+    // Constructor
+    sourceBuilder.write("${visitor.className}Widget (");
 
-    for (var paramName in visitor.fields.keys) {
-      var type = visitor.fields[paramName]!;
-
-      if (paramName.startsWith('_')) {
-        continue;
-      }
-      if (type.element?.displayName == MyElementKind.INT ||
-          type.element?.displayName == MyElementKind.INT_NULLABLE) {
-        knob.write(
-            '$paramName: ${knobProvider.buildKnob(MyElementKind.INT, label: paramName)}');
-      } else if (type.element?.displayName == MyElementKind.STRING ||
-          type.element?.displayName == MyElementKind.STRING_NULLABLE) {
-        knob.write(
-            '$paramName: ${knobProvider.buildKnob(MyElementKind.STRING, label: paramName)}');
-      } else if (type.element?.displayName == MyElementKind.BOOLEAN ||
-          type.element?.displayName == MyElementKind.BOOLEAN_NULLABLE) {
-        knob.write(
-            '$paramName: ${knobProvider.buildKnob(MyElementKind.BOOLEAN, label: paramName)}');
-      } else if (type.element?.displayName == MyElementKind.DOUBLE ||
-          type.element?.displayName == MyElementKind.DOUBLE_NULLABLE) {
-        knob.write(
-            '$paramName: ${knobProvider.buildKnob(MyElementKind.DOUBLE, label: paramName)}');
-      } else if (type.isDartCoreEnum) {
-        var enumValues = (type.element as EnumElement).fields;
-        knob.write(
-            '$paramName: ${knobProvider.buildKnob(MyElementKind.ENUM, label: paramName, child: enumValues)}');
-      } else if (type.element?.displayName == MyElementKind.DATE_TIME ||
-          type.element?.displayName == MyElementKind.DATE_TIME_NULLABLE) {
-        knob.write(
-            '$paramName: ${knobProvider.buildKnob(MyElementKind.DATE_TIME, label: paramName)}');
-      } else {}
+    final parametersBuilder = StringBuffer();
+    for (String parameterName in visitor.fields.keys) {
+      parametersBuilder.write("this.$parameterName,");
     }
-    return knob.toString();
-  }
-
-  String storybookClassBuilder(ModelVisitor visitor) {
-    var className = "${visitor.classname}";
-    List<Field> fields = [];
-
-    var annotationListBuilder = ListBuilder<Expression>();
-    Expression override = _kOverrideDecorator;
-    annotationListBuilder.add(override);
-
-    var methodParamsListBuilder = ListBuilder<Parameter>();
-    var paramBuilder = ParameterBuilder();
-    paramBuilder.name = 'context';
-    paramBuilder.type = const Reference("BuildContext");
-    methodParamsListBuilder.add(paramBuilder.build());
-
-    for (var paramName in visitor.fields.keys) {
-      var fb = FieldBuilder();
-      fb.name = paramName;
-      fb.type = Reference(visitor.fields[paramName].toString());
-      fields.add(fb.build());
+    sourceBuilder.write(parametersBuilder);
+    sourceBuilder.writeln(");");
+    for (String propertyName in visitor.fields.keys) {
+      sourceBuilder
+          .writeln("final ${visitor.fields[propertyName]} $propertyName;");
     }
 
-    var cb = ConstructorBuilder();
-    cb.constant = true;
+    sourceBuilder.writeln("@override");
+    sourceBuilder.writeln(
+        "Widget build(BuildContext context) => Center(child: Padding(padding: const EdgeInsets.all(12),child: Column(mainAxisAlignment: MainAxisAlignment.center,crossAxisAlignment: CrossAxisAlignment.center,mainAxisSize: MainAxisSize.max,");
+    sourceBuilder.writeln("children:<Widget>[");
+    final textWidgets = StringBuffer();
+    for (String paramName in visitor.fields.keys) {
+      textWidgets.writeln("Text(\"$paramName = \$$paramName\"),");
+    }
+    sourceBuilder.writeln(textWidgets);
+    sourceBuilder.writeln("],");
+    sourceBuilder.writeln("),),);");
+    sourceBuilder.writeln("}");
 
-    var mb = MethodBuilder();
-    mb.annotations = annotationListBuilder;
-    mb.name = "build";
-    mb.returns = Reference('Widget');
-    mb.body = Block.of(
-      [
-        Code(
-            "return Scaffold(body: Column(children: [${addKnobsToStory(visitor)}],),);")
-      ],
-    );
-    mb.requiredParameters = methodParamsListBuilder;
-
-    var db = ListBuilder<String>();
-    db.add("import 'package:flutter/material.dart';\n");
-
-    final myClass = Class((b) => b
-      ..name = "${className}Widget"
-      ..docs = db
-      ..extend = refer('StatelessWidget')
-      ..methods.add(mb.build())
-      ..constructors.add(cb.build()));
-
-    return _dartfmt.format(
-        '${myClass.accept(DartEmitter(useNullSafetySyntax: true, allocator: Allocator.simplePrefixing(), orderDirectives: true))}');
+    return sourceBuilder.toString();
   }
 }
 
 class ModelVisitor extends SimpleElementVisitor {
-  late DartType classname;
-  Map<String, DartType> fields = {};
+  late DartType className;
+  Map<String, DartType> fields = Map();
 
   @override
   visitConstructorElement(ConstructorElement element) {
-    classname = element.type.returnType;
+    className = element.type.returnType;
+    return super.visitConstructorElement(element);
   }
 
   @override
   visitFieldElement(FieldElement element) {
     fields[element.name] = element.type;
+
+    return super.visitFieldElement(element);
   }
 }
