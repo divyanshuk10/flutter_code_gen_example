@@ -110,7 +110,7 @@ class CustomWidgetGenerator extends GeneratorForAnnotation<CustomWidget> {
     mb.requiredParameters = methodParamsListBuilder;
 
     var db = ListBuilder<String>();
-    db.add("import 'package:tab_gsd/common_imports.dart';\n");
+    db.add("import 'package:flutter/material.dart';\n");
 
     final myClass = Class((b) => b
       ..annotations = classAnnotationListBuilder
