@@ -1,0 +1,28 @@
+name: custom_widget_generator
+version: 1.0.0+1
+publish_to: none
+
+environment:
+  sdk: ">=2.18.0 <3.0.0"
+  flutter: 3.3.2
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  flutter_localizations:
+    sdk: flutter
+
+  build: ^2.1.1
+  source_gen: ^1.2.7
+  build_runner: ^2.1.5
+  build_config: ^1.1.1
+  analyzer: ">=5.9.0 <6.0.0"
+  code_builder: ^4.4.0
+
+  custom_widget_annotation:
+    path: ../custom_widget_annotation/
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter

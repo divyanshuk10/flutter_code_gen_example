@@ -1,5 +1,8 @@
+import 'package:custom_widget_annotation/custom_widget_annotation.dart';
+
 enum UserType { nonVerified, verified }
 
+@customWidget
 class UserDetails {
   UserDetails(
       {required this.firstName,
