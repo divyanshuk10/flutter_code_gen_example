@@ -15,7 +15,6 @@ import 'knob_provider.dart';
 
 final _dartfmt = DartFormatter();
 const _kOverrideDecorator = CodeExpression(Code('override'));
-const _kRoutePageDecorator = CodeExpression(Code('RoutePage()'));
 
 class CustomWidgetGenerator extends GeneratorForAnnotation<CustomWidget> {
   @override
@@ -77,10 +76,6 @@ class CustomWidgetGenerator extends GeneratorForAnnotation<CustomWidget> {
     Expression override = _kOverrideDecorator;
     annotationListBuilder.add(override);
 
-    var classAnnotationListBuilder = ListBuilder<Expression>();
-    Expression routePage = _kRoutePageDecorator;
-    classAnnotationListBuilder.add(routePage);
-
     var methodParamsListBuilder = ListBuilder<Parameter>();
     var paramBuilder = ParameterBuilder();
     paramBuilder.name = 'context';
@@ -113,7 +108,6 @@ class CustomWidgetGenerator extends GeneratorForAnnotation<CustomWidget> {
     db.add("import 'package:flutter/material.dart';\n");
 
     final myClass = Class((b) => b
-      ..annotations = classAnnotationListBuilder
       ..name = "${className}Widget"
       ..docs = db
       ..extend = refer('StatelessWidget')
