@@ -1,0 +1,22 @@
+targets:
+  $default:
+    builders:
+      tab_widget_generator|tab_widget_annotation:
+        options:
+          build_extensions:
+            '^lib/{{}}.dart': 'lib/storybook/{{}}.g.dart'
+          enabled: true
+      source_gen|combining_builder:
+        options:
+          build_extensions:
+            '^lib/{{}}.dart': 'lib/storybook/{{}}.g.dart'
+
+builders:
+  tab_widget_annotation:
+    target: ":tab_widget_generator"
+    import: "package:tab_widget_generator/builder.dart"
+    builder_factories: ["tabWidgetBuilder"]
+    build_extensions: {'^lib/{{}}.dart': ['lib/storybook/{{}}.g.part']}
+    auto_apply: dependents
+    build_to: cache
+    applies_builders: ["source_gen|combining_builder"]

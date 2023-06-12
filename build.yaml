@@ -1,0 +1,13 @@
+targets:
+  $default:
+    builders:
+      source_gen|combining_builder:
+        options:
+          build_extensions:
+            '^lib/{{}}.dart': 'widgets/{{}}.g.dart'
+          enabled: true
+      tab_widget_generator|tab_widget_annotation:
+        options:
+          build_extensions:
+            '^lib/{{}}.dart': 'widgets/{{}}.g.dart'
+          enabled: true
