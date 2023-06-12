@@ -1,4 +1,7 @@
 import 'package:custom_widget_annotation/custom_widget_annotation.dart';
+import 'package:flutter/material.dart';
+
+part '../widgets/model/user_details.g.dart';
 
 enum UserType { nonVerified, verified }
 
